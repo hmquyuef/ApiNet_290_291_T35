@@ -1,0 +1,51 @@
+[HttpPost]
+[Route("/home/createProduct")]
+public async Task<IActionResult> createProduct(string name, int price, string description)
+{
+    var client = new HttpClient();
+    client.BaseAddress = new Uri("http://localhost:5131/");
+
+    var product = new
+    {
+        Name = name,
+        Price = price,
+        Description = description
+    };
+
+    var json = JsonSerializer.Serialize(product);
+    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+    var response = await client.PostAsync("api/products", content);
+
+    if (response.IsSuccessStatusCode)
+    {
+        return StatusCode(StatusCodes.Status201Created);
+    }
+    else
+    {
+        return StatusCode(StatusCodes.Status400BadRequest, response.ReasonPhrase);
+    }
+}
+
+function createProduct() {
+    var name = $('#tensanpham').val();
+    var price = $('#giatien').val();
+    var description = $('#mota').val();
+    $.ajax({
+        url: 'http://localhost:5131/api/products',
+        type: 'POST',
+        processData: false,
+        contentType: 'application/json',
+        data: JSON.stringify({
+            name: name,
+            price: price,
+            description: description
+        }),
+        success: function (data) {
+            alert('Tạo sản phẩm thành công');
+        },
+        error: function (error) {
+            alert('Tạo sản phẩm thất bại');
+        }
+    });
+}

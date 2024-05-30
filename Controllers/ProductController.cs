@@ -18,7 +18,12 @@ namespace ApiNet_290_291_T35.Controllers
             _context = context;
         }
 
-        //GET: api/products -> Lấy thông tin
+        #region GET: api/products -> Lấy thông tin
+        /// <summary>
+        ///     API lấy thông tin danh sách sản phẩm
+        /// </summary>
+        /// <param name="keyword"></param>
+        /// <response code="200">Thành công lấy được danh sách các sản phẩm</response>
         [HttpGet]
         //public async Task<IActionResult> GetProducts(string ProductId = "", string Name = "", int Price = 0)
         public async Task<IActionResult> GetProducts(string keyword = "")
@@ -41,8 +46,16 @@ namespace ApiNet_290_291_T35.Controllers
                 .ToListAsync();
             return StatusCode(StatusCodes.Status200OK, products);
         }
+        #endregion
 
-        //POST: api/products -> Thêm mới
+        #region POST: api/products -> Thêm mới
+        /// <summary>
+        ///     API khởi tạo thông tin sản phẩm
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="Price"></param>
+        /// <param name="Discription"></param>
+        /// <response code="200">Khởi tạo sản phẩm thành công</response>
         [HttpPost]
         public async Task<IActionResult> CreateProduct(ProductInput input)
         //public async Task<IActionResult> CreateProduct(string name, int price, string des)
@@ -66,8 +79,17 @@ namespace ApiNet_290_291_T35.Controllers
             //};
             return StatusCode(StatusCodes.Status201Created);
         }
+        #endregion
 
-        //PUT: api/products/5 -> Cập nhật thông tin
+        #region PUT: api/products/5 -> Cập nhật thông tin
+        /// <summary>
+        ///     API cập nhật thông tin sản phẩm
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <param name="Name"></param>
+        /// <param name="Price"></param>
+        /// <param name="Discription"></param>
+        /// <response code="200">Cập nhật thông tin sản phẩm thành công</response>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct(Guid id, ProductInput input)
         {
@@ -83,8 +105,14 @@ namespace ApiNet_290_291_T35.Controllers
             await _context.SaveChangesAsync();
             return StatusCode(StatusCodes.Status204NoContent);
         }
+        #endregion
 
-        //DELETE: api/products/5 -> Xóa thông tin
+        #region DELETE: api/products/5 -> Xóa thông tin
+        /// <summary>
+        ///     API xóa thông tin sản phẩm
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <response code="204">Xóa thông tin sản phẩm thành công</response>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
@@ -97,8 +125,14 @@ namespace ApiNet_290_291_T35.Controllers
             await _context.SaveChangesAsync();
             return StatusCode(StatusCodes.Status204NoContent);
         }
+        #endregion
 
-        //DELETE: api/products/5 -> Xóa thông tin
+        #region DELETE: api/products/5 -> Xóa thông tin
+        /// <summary>
+        ///     API xóa danh sách thông tin sản phẩm
+        /// </summary>
+        /// <param name="Ids"></param>
+        /// <response code="204">Xóa thông tin sản phẩm thành công</response>
         [HttpDelete]
         public async Task<IActionResult> DeleteListProduct(List<Guid> id)
         {
@@ -113,5 +147,6 @@ namespace ApiNet_290_291_T35.Controllers
             await _context.SaveChangesAsync();
             return StatusCode(StatusCodes.Status204NoContent);
         }
+        #endregion
     }
 }
