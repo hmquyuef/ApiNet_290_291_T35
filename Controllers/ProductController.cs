@@ -1,9 +1,14 @@
-﻿using ApiNet_290_291_T35.Models.Entities;
+﻿using ApiNet_290_291_T35.Models.Default;
+using ApiNet_290_291_T35.Models.Entities;
 using ApiNet_290_291_T35.Models.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Experimental.ProjectCache;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using NuGet.Protocol;
 using System.Linq;
 
 namespace ApiNet_290_291_T35.Controllers
@@ -15,9 +20,18 @@ namespace ApiNet_290_291_T35.Controllers
     public class ProductController : ControllerBase
     {
         private readonly ApiPetShopDbContext _context;
-        public ProductController(ApiPetShopDbContext context)
+        private readonly IMemoryCache _cache;
+        private readonly MemoryCacheEntryOptions _cacheOptions;
+        private static string cacheGetProductsKey = "GetProducts";
+        private readonly ILogger<ProductController> _logger;
+        public ProductController(ApiPetShopDbContext context, 
+                ILogger<ProductController> logger,
+                IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
+            _logger = logger;
+            _cacheOptions = new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(60));
         }
 
         #region GET: api/products -> Lấy thông tin
@@ -28,15 +42,11 @@ namespace ApiNet_290_291_T35.Controllers
         /// <response code="200">Thành công lấy được danh sách các sản phẩm</response>
         [HttpGet]
         //public async Task<IActionResult> GetProducts(string ProductId = "", string Name = "", int Price = 0)
-        public async Task<IActionResult> GetProducts(string keyword = "")
+        public async Task<ResponseDefault<List<ProductOutput>>> GetProducts(string keyword = "")
         {
-            //var products = await _context.Products
-            //    .Where(x => x.Id.ToString().Contains(ProductId) &&
-            //                x.Name.ToLower().Contains(Name.ToLower()) &&
-            //                (Price == 0 || x.Price.Equals(Price)))
-            //    .ToListAsync();
-
-            var products = await _context.Products
+            if (!_cache.TryGetValue(cacheGetProductsKey, out ResponseDefault<List<ProductOutput>> cacheResult))
+            {
+                var products = await _context.Products
                 .Where(x => x.Keyword.ToLower().Contains(keyword.ToLower()))
                 .Select(x => new ProductOutput
                 {
@@ -46,7 +56,20 @@ namespace ApiNet_290_291_T35.Controllers
                     Description = x.Description
                 })
                 .ToListAsync();
-            return StatusCode(StatusCodes.Status200OK, products);
+
+                var response = new ResponseDefault<List<ProductOutput>>
+                {
+                    Items = products
+                };
+                _cache.Set(cacheGetProductsKey, response, _cacheOptions);
+                _logger.LogInformation("Get data from SQL SERVER: GetProducts");
+                return response;
+            }
+            else
+            {
+                _logger.LogInformation("Get data from CACHE: GetProducts");
+                return cacheResult;
+            }
         }
         #endregion
 

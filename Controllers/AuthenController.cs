@@ -20,8 +20,8 @@ namespace ApiNet_290_291_T35.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ApiNetIdentityContext _context;
         private readonly IConfiguration _config;
-        public AuthenController(UserManager<IdentityUser> userManager, 
-            SignInManager<IdentityUser> signInManager, 
+        public AuthenController(UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager,
             ApiNetIdentityContext context,
             IConfiguration configuration)
         {
@@ -44,7 +44,7 @@ namespace ApiNet_290_291_T35.Controllers
                 EmailConfirmed = true
             };
             var result = await _userManager.CreateAsync(user, input.Password);
-            if(result.Succeeded)
+            if (result.Succeeded)
             {
                 return StatusCode(StatusCodes.Status201Created);
             }
@@ -61,29 +61,36 @@ namespace ApiNet_290_291_T35.Controllers
         {
             //Tìm người dùng theo tên đăng nhập
             var user = await _userManager.FindByNameAsync(input.Username);
-            if(user == null) {
+            if (user == null)
+            {
                 return StatusCode(StatusCodes.Status400BadRequest, "Không tìm thấy người dùng");
             }
-
-            //Tìm kiếm token của người dùng
-            var userToken = await _context.UserTokens
-                .Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
-            if(userToken != null) {
-                var remainingTime = GetExpiresInSecond(userToken.Value);
-                if(remainingTime > 0)
-                {
-                   return StatusCode(StatusCodes.Status200OK, new OutputToken
-                   {
-                       Token = userToken.Value,
-                       ExpiresIn = remainingTime
-                   });
-                }
-            }
-
             //Thực hiện đăng nhập cho người dùng và lưu thông tin Token
             var result = await _signInManager.PasswordSignInAsync(user, input.Password, false, false);
-            if(result.Succeeded)
+
+            if (result.Succeeded)
             {
+                //Tìm kiếm token của người dùng
+                var userToken = await _context.UserTokens
+                    .Where(x => x.UserId == user.Id).FirstOrDefaultAsync();
+                if (userToken != null)
+                {
+                    var remainingTime = GetExpiresInSecond(userToken.Value);
+                    if (remainingTime > 0)
+                    {
+                        return StatusCode(StatusCodes.Status200OK, new OutputToken
+                        {
+                            Token = userToken.Value,
+                            ExpiresIn = remainingTime
+                        });
+                    }
+                    else
+                    {
+                        _context.UserTokens.Remove(userToken);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
                 //Tạo mới Token
                 var token = GenerateToken(user);
                 var usertoken = new IdentityUserToken<string>
