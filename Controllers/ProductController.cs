@@ -1,5 +1,6 @@
 ﻿using ApiNet_290_291_T35.Models.Entities;
 using ApiNet_290_291_T35.Models.Product;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ namespace ApiNet_290_291_T35.Controllers
     [Route("api/products")]
     //[Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductController : ControllerBase
     {
         private readonly ApiPetShopDbContext _context;
